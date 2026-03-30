@@ -5,19 +5,21 @@ import keyboard
 import os
 import threading
 import time
+import random
+import string
 
 # ------------- CMD BANNER -------------
 os.system("cls")
 print(r"""
 ██████╗  █████╗ ██████╗ ██╗  ██╗███╗   ██╗███████╗████████╗
 ██╔══██╗██╔══██╗██╔══██╗██║ ██╔╝████╗  ██║██╔════╝╚══██╔══╝
-██████╔╝███████║██████╔╝█████╔╝ ██╔██╗ ██║█████╗     ██║   
+██╝  ██ ██ ██║█ █████╔╝█████╔╝ ██╔██╗ ██║█████╗     ██║   
 ██╔══██╗██╔══██║██╔══██╗██╔═██╗ ██║╚██╗██║██╔══╝     ██║   
-██║  ██║██║  ██║██║  ██║██║  ██╗██║ ╚████║███████╗   ██║   
+██████║ ██║  ██║  ██║██║  ██║██║  ██╗██║ ╚████║███████╗   ██║   
 ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   
 
                 ★ DARKNET REMOTE LOCK SYSTEM ★
-            [Auto-Restart Mode - Continuous Operation]
+            [Hacker Mode - Matrix Style Animation]
 """)
 
 # ------------- SETTINGS -------------
@@ -31,6 +33,7 @@ is_locked = False
 lock_window = None
 server_running = True
 lock_thread = None
+animation_running = False
 
 # ------------------------------------
 def unlock_keys():
@@ -40,10 +43,149 @@ def unlock_keys():
     except:
         pass
 
-def lock_screen():
-    global is_locked, lock_window
+def matrix_animation(canvas, width, height):
+    """Matrix code rain animation"""
+    global animation_running
+    chars = string.ascii_letters + string.digits + "!@#$%^&*"
+    drops = [0] * (width // 20)
+    font_size = 16
     
-    # Double check to prevent double lock
+    def draw():
+        if not animation_running:
+            return
+        canvas.delete("matrix")
+        for i in range(len(drops)):
+            char = random.choice(chars)
+            x = i * 20 + 10
+            y = drops[i] * font_size + 10
+            if y < height:
+                color = "#0f0" if random.random() > 0.7 else "#0a0"
+                canvas.create_text(x, y, text=char, fill=color, font=("Courier", font_size, "bold"), tags="matrix")
+                if random.random() > 0.95:
+                    drops[i] = 0
+                else:
+                    drops[i] += 1
+            else:
+                drops[i] = 0
+        canvas.after(50, draw)
+    
+    draw()
+
+def glitch_effect(canvas, text_widget, count=0):
+    """Glitch effect on text"""
+    if not animation_running:
+        return
+    if count < 10:
+        colors = ["red", "green", "yellow", "cyan", "magenta", "white"]
+        if count % 2 == 0:
+            text_widget.config(fg=random.choice(colors))
+            canvas.config(bg="black")
+        else:
+            text_widget.config(fg="#0f0")
+        canvas.after(100, glitch_effect, canvas, text_widget, count + 1)
+
+def type_animation(label, text, index=0):
+    """Typing animation effect"""
+    if not animation_running:
+        return
+    if index < len(text):
+        label.config(text=text[:index+1])
+        label.after(50, type_animation, label, text, index+1)
+
+def hacker_animation(win):
+    """Full hacker animation on lock screen"""
+    global animation_running
+    animation_running = True
+    
+    # Create canvas for matrix rain
+    canvas = tk.Canvas(win, bg="black", highlightthickness=0)
+    canvas.pack(fill="both", expand=True)
+    
+    # Glowing title
+    title = tk.Label(
+        canvas,
+        text="⚠ SYSTEM BREACHED ⚠",
+        fg="#0f0", bg="black",
+        font=("Courier", 36, "bold")
+    )
+    title.place(relx=0.5, rely=0.15, anchor="center")
+    
+    # Subtitle with typing animation
+    subtitle = tk.Label(
+        canvas,
+        text="",
+        fg="#0f0", bg="black",
+        font=("Courier", 18)
+    )
+    subtitle.place(relx=0.5, rely=0.25, anchor="center")
+    type_animation(subtitle, ">>> REMOTE LOCK ACTIVE <<<")
+    
+    # Matrix rain
+    width = win.winfo_screenwidth()
+    height = win.winfo_screenheight()
+    matrix_animation(canvas, width, height)
+    
+    # Hacker ASCII Art
+    hacker_art = """
+    ╔══════════════════════════════════════════════════════════╗
+    ║  [*] TARGET: LOCALHOST                                   ║
+    ║  [*] STATUS: LOCKED                                      ║
+    ║  [*] ENCRYPTION: AES-256                                 ║
+    ║  [*] FIREWALL: ACTIVE                                    ║
+    ║  [*] INTRUSION DETECTION: ENABLED                        ║
+    ║  [*] BACKDOOR: DEPLOYED                                  ║
+    ╚══════════════════════════════════════════════════════════╝
+    """
+    
+    ascii_label = tk.Label(
+        canvas,
+        text=hacker_art,
+        fg="#0f0", bg="black",
+        font=("Courier", 12)
+    )
+    ascii_label.place(relx=0.5, rely=0.4, anchor="center")
+    
+    # PIN Entry Frame with glow
+    pin_frame = tk.Frame(canvas, bg="black")
+    pin_frame.place(relx=0.5, rely=0.65, anchor="center")
+    
+    pin_label = tk.Label(
+        pin_frame,
+        text="[ ENTER UNLOCK KEY ]",
+        fg="#0f0", bg="black",
+        font=("Courier", 20, "bold")
+    )
+    pin_label.pack()
+    
+    entry = tk.Entry(
+        pin_frame,
+        show="*", 
+        font=("Courier", 24),
+        bg="black",
+        fg="#0f0",
+        insertbackground="#0f0",
+        width=15,
+        justify="center"
+    )
+    entry.pack(pady=10)
+    entry.focus()
+    
+    status = tk.Label(
+        pin_frame,
+        text="",
+        fg="#ff0", bg="black",
+        font=("Courier", 14)
+    )
+    status.pack()
+    
+    # Glitch effect
+    glitch_effect(canvas, title)
+    
+    return entry, status
+
+def lock_screen():
+    global is_locked, lock_window, animation_running
+    
     if is_locked:
         print("\n[DarkNet] ⚠ System already locked!")
         return
@@ -64,46 +206,35 @@ def lock_screen():
     win.attributes("-topmost", True)
     win.configure(bg="black")
     win.overrideredirect(True)
-
-    title = tk.Label(
-        win,
-        text="DarkNet LOCKED SYSTEM",
-        fg="red", bg="black",
-        font=("Arial", 40, "bold")
-    )
-    title.pack(pady=20)
-
-    label = tk.Label(
-        win, text="ENTER PIN TO UNLOCK",
-        fg="white", bg="black",
-        font=("Arial", 30)
-    )
-    label.pack(pady=30)
-
-    entry = tk.Entry(win, show="*", font=("Arial", 30))
-    entry.pack()
     
-    status = tk.Label(
-        win, text="", fg="yellow", bg="black",
-        font=("Arial", 16)
-    )
-    status.pack(pady=10)
-
+    # Start hacker animation
+    entry, status = hacker_animation(win)
+    
     def check():
-        global is_locked
+        global is_locked, animation_running
         if entry.get() == UNLOCK_PIN:
+            animation_running = False
             win.destroy()
             is_locked = False
             unlock_keys()
             print("\n[DarkNet] ✅ System UNLOCKED locally!")
         else:
-            status.config(text="❌ WRONG PIN! Try again")
+            status.config(text="[!] ACCESS DENIED [!]")
             entry.delete(0, tk.END)
             entry.focus()
+            # Flash effect
+            for _ in range(3):
+                status.config(fg="red")
+                win.update()
+                time.sleep(0.1)
+                status.config(fg="#ff0")
+                win.update()
+                time.sleep(0.1)
     
     def remote_unlock(pin):
-        global is_locked
+        global is_locked, animation_running
         if pin == UNLOCK_PIN:
+            animation_running = False
             win.destroy()
             is_locked = False
             unlock_keys()
@@ -111,17 +242,29 @@ def lock_screen():
         return False
     
     win.remote_unlock = remote_unlock
-
-    btn = tk.Button(win, text="UNLOCK", font=("Arial", 30), command=check)
-    btn.pack(pady=30)
+    
+    # Custom button with hacker style
+    btn = tk.Button(
+        win,
+        text="[ UNLOCK ]",
+        font=("Courier", 20, "bold"),
+        command=check,
+        bg="black",
+        fg="#0f0",
+        activebackground="#0a0",
+        activeforeground="white",
+        bd=2,
+        relief="groove"
+    )
+    btn.place(relx=0.5, rely=0.85, anchor="center")
     
     entry.bind('<Return>', lambda e: check())
     win.protocol("WM_DELETE_WINDOW", lambda: None)
-
-    print("\n[DarkNet] 🔒 System LOCKED!")
+    
+    print("\n[DarkNet] 🔒 System LOCKED! [HACKER MODE ACTIVE]")
     win.mainloop()
     
-    # Cleanup after window closes
+    # Cleanup
     is_locked = False
     lock_window = None
     unlock_keys()
@@ -142,7 +285,6 @@ def remote_unlock_with_pin(pin):
             try:
                 if hasattr(lock_window, 'remote_unlock'):
                     if lock_window.remote_unlock(pin):
-                        # Wait a bit for window to close
                         time.sleep(0.5)
                         return "UNLOCKED"
                 else:
@@ -160,10 +302,11 @@ def remote_unlock_with_pin(pin):
 
 def unlock_system():
     """Unlock system remotely"""
-    global is_locked, lock_window
+    global is_locked, lock_window, animation_running
     
     if lock_window:
         try:
+            animation_running = False
             lock_window.destroy()
         except:
             pass
@@ -218,8 +361,7 @@ def start_server():
                         print("[DarkNet] ⚠ System already locked!")
                     else:
                         conn.send(b"LOCKING")
-                        print("[DarkNet] 🔒 Locking system...")
-                        # Start lock screen in new thread
+                        print("[DarkNet] 🔒 Locking system... [HACKER MODE]")
                         new_lock_thread = threading.Thread(target=lock_screen, daemon=True)
                         new_lock_thread.start()
                 
